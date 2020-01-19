@@ -3,6 +3,7 @@ use rltk::{Rltk, RGB};
 use specs::prelude::*;
 
 mod components;
+mod map;
 mod state;
 mod systems;
 
@@ -19,6 +20,7 @@ fn main() {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
+    gs.ecs.insert(map::new_map());
     gs.ecs
         .create_entity()
         .with(Position { x: 40, y: 25 })

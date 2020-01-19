@@ -1,6 +1,7 @@
 use crate::components::{Player, Position, Renderable};
+use crate::map::TileType;
 use crate::systems::LeftWalker;
-use rltk::{Console, GameState, Rltk, VirtualKeyCode};
+use rltk::{Console, GameState, Rltk, VirtualKeyCode, RGB};
 use specs::{Join, RunNow, World, WorldExt};
 use std::cmp::{max, min};
 
@@ -37,6 +38,36 @@ impl State {
             },
         }
     }
+
+    fn draw_map(map: &[TileType], ctx: &mut Rltk) {
+        let mut x = 0;
+        let mut y = 0;
+
+        for tile in map.iter() {
+            match tile {
+                TileType::Floor => ctx.set(
+                    x,
+                    y,
+                    RGB::from_f32(0.5, 0.5, 0.5),
+                    RGB::from_f32(0.0, 0.0, 0.0),
+                    rltk::to_cp437('.'),
+                ),
+                TileType::Wall => ctx.set(
+                    x,
+                    y,
+                    RGB::from_f32(0.0, 1.0, 0.0),
+                    RGB::from_f32(0.0, 0.0, 0.0),
+                    rltk::to_cp437('#'),
+                ),
+            }
+
+            x += 1;
+            if x > 79 {
+                x = 0;
+                y += 1;
+            }
+        }
+    }
 }
 
 impl GameState for State {
@@ -44,6 +75,8 @@ impl GameState for State {
         ctx.cls();
         self.run_systems();
         State::player_input(self, ctx);
+        let map = self.ecs.fetch::<Vec<TileType>>();
+        Self::draw_map(&map, ctx);
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
         for (pos, render) in (&positions, &renderables).join() {
