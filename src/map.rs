@@ -1,5 +1,5 @@
 use crate::rect::Rect;
-use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB, Console};
 use std::cmp::{max, min};
 
 #[derive(PartialEq, Copy, Clone)]
@@ -35,7 +35,7 @@ impl Map {
     fn apply_horizontal_tunnel(&mut self, x1: i32, x2: i32, y: i32) {
         for x in min(x1, x2)..=max(x1, x2) {
             let idx = self.xy_idx(x, y);
-            if idx > 0 && idx < 80 * 50 {
+            if idx > 0 && idx < (self.width * self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor
             }
         }
@@ -44,21 +44,26 @@ impl Map {
     fn apply_vertical_tunnel(&mut self, y1: i32, y2: i32, x: i32) {
         for y in min(y1, y2)..=max(y1, y2) {
             let idx = self.xy_idx(x, y);
-            if idx > 0 && idx < 80 * 50 {
+            if idx > 0 && idx < (self.width * self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor
             }
         }
     }
 
-    pub fn new_map_rooms_and_corridors() -> Map {
-        let mut map = Map {
-            tiles: vec![TileType::Wall; 80 * 50],
+    pub fn new(width: i32, height: i32) -> Map {
+        let dimensions = (width * height) as usize;
+        Map {
+            tiles: vec![TileType::Wall; dimensions],
             rooms: Vec::new(),
-            width: 80,
-            height: 50,
-            revealed_tiles: vec![false; 80 * 50],
-            visible_tiles: vec![false; 80 * 50],
-        };
+            width,
+            height,
+            revealed_tiles: vec![false; dimensions],
+            visible_tiles: vec![false; dimensions],
+        }
+    }
+
+    pub fn new_map_with_rooms_and_corridors(width: i32, height: i32) -> Map {
+        let mut map = Self::new(width, height);
 
         const MAX_ROOMS: i32 = 30;
         const MIN_SIZE: i32 = 6;
@@ -67,8 +72,8 @@ impl Map {
         for _i in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);
             let h = rng.range(MIN_SIZE, MAX_SIZE);
-            let x = rng.roll_dice(1, 80 - w - 1) - 1;
-            let y = rng.roll_dice(1, 50 - h - 1) - 1;
+            let x = rng.roll_dice(1, width - w - 1) - 1;
+            let y = rng.roll_dice(1, height - h - 1) - 1;
             let new_room = Rect::new(x, y, w, h);
             let mut ok = true;
             for other_room in map.rooms.iter() {
@@ -93,6 +98,39 @@ impl Map {
             }
         }
         map
+    }
+
+    pub fn draw(&mut self, ctx: &mut Rltk) {
+        let mut x = 0;
+        let mut y = 0;
+
+        for (idx, tile) in self.tiles.iter().enumerate() {
+            if self.revealed_tiles[idx] {
+                let glyph;
+                let mut fg;
+                match tile {
+                    TileType::Floor => {
+                        fg = RGB::from_f32(0.0, 0.5, 0.5);
+                        glyph = rltk::to_cp437('.');
+                    }
+
+                    TileType::Wall => {
+                        fg = RGB::from_f32(0.0, 1.0, 0.0);
+                        glyph = rltk::to_cp437('#');
+                    }
+                }
+                if !self.visible_tiles[idx] {
+                    fg = fg.to_greyscale()
+                }
+                ctx.set(x, y, fg, RGB::from_f32(0.0, 0.0, 0.0), glyph);
+            }
+
+            x += 1;
+            if x > self.width - 1 {
+                x = 0;
+                y += 1;
+            }
+        }
     }
 }
 

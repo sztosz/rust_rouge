@@ -1,8 +1,7 @@
 use crate::components::{Player, Position, Renderable, Viewshed};
-use crate::map;
-use crate::map::Map;
-use crate::visibility_system::VisibilitySystem;
-use rltk::{Console, GameState, Rltk, VirtualKeyCode, RGB};
+use crate::map::{Map, TileType};
+use crate::systems::VisibilitySystem;
+use rltk::{Console, GameState, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 
@@ -25,7 +24,7 @@ impl State {
 
         for (_player, pos, viewshed) in (&mut players, &mut positions, &mut viewsheds).join() {
             let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
-            if map.tiles[destination_idx] != map::TileType::Wall {
+            if map.tiles[destination_idx] != TileType::Wall {
                 pos.x = min(79, max(0, pos.x + delta_x));
                 pos.y = min(49, max(0, pos.y + delta_y));
 
@@ -51,40 +50,7 @@ impl State {
         }
     }
 
-    fn draw_map(ecs: &World, ctx: &mut Rltk) {
-        let map = ecs.fetch::<Map>();
 
-        let mut x = 0;
-        let mut y = 0;
-
-        for (idx, tile) in map.tiles.iter().enumerate() {
-            if map.revealed_tiles[idx] {
-                let glyph;
-                let mut fg;
-                match tile {
-                    map::TileType::Floor => {
-                        fg = RGB::from_f32(0.0, 0.5, 0.5);
-                        glyph = rltk::to_cp437('.');
-                    }
-
-                    map::TileType::Wall => {
-                        fg = RGB::from_f32(0.0, 1.0, 0.0);
-                        glyph = rltk::to_cp437('#');
-                    }
-                }
-                if !map.visible_tiles[idx] {
-                    fg = fg.to_greyscale()
-                }
-                ctx.set(x, y, fg, RGB::from_f32(0.0, 0.0, 0.0), glyph);
-            }
-
-            x += 1;
-            if x > 79 {
-                x = 0;
-                y += 1;
-            }
-        }
-    }
 }
 
 impl GameState for State {
@@ -92,7 +58,8 @@ impl GameState for State {
         ctx.cls();
         State::player_input(self, ctx);
         self.run_systems();
-        Self::draw_map(&self.ecs, ctx);
+        let map = self.ecs.get_mut::<Map>().unwrap();
+        map.draw(ctx);
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
         for (pos, render) in (&positions, &renderables).join() {
