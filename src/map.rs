@@ -98,7 +98,7 @@ impl Map {
 
 impl Algorithm2D for Map {
     fn point2d_to_index(&self, pt: Point) -> i32 {
-        (pt.y + self.width) + pt.x
+        (pt.y * self.width) + pt.x
     }
 
     fn index_to_point2d(&self, idx: i32) -> Point {
