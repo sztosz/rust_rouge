@@ -63,7 +63,7 @@ impl State {
                 let mut fg;
                 match tile {
                     map::TileType::Floor => {
-                        fg = RGB::from_f32(0.5, 0.5, 0.5);
+                        fg = RGB::from_f32(0.0, 0.5, 0.5);
                         glyph = rltk::to_cp437('.');
                     }
 
