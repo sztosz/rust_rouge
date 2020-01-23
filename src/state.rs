@@ -40,11 +40,15 @@ impl State {
             Some(key) => match key {
                 VirtualKeyCode::Numpad1 => Self::try_move_player(-1, 1, &mut gs.ecs),
                 VirtualKeyCode::Numpad2 => Self::try_move_player(0, 1, &mut gs.ecs),
+                VirtualKeyCode::Down => Self::try_move_player(0, 1, &mut gs.ecs),
                 VirtualKeyCode::Numpad3 => Self::try_move_player(1, 1, &mut gs.ecs),
                 VirtualKeyCode::Numpad4 => Self::try_move_player(-1, 0, &mut gs.ecs),
+                VirtualKeyCode::Left => Self::try_move_player(-1, 0, &mut gs.ecs),
                 VirtualKeyCode::Numpad6 => Self::try_move_player(1, 0, &mut gs.ecs),
-                VirtualKeyCode::Numpad8 => Self::try_move_player(0, -1, &mut gs.ecs),
+                VirtualKeyCode::Right => Self::try_move_player(1, 0, &mut gs.ecs),
                 VirtualKeyCode::Numpad7 => Self::try_move_player(-1, -1, &mut gs.ecs),
+                VirtualKeyCode::Numpad8 => Self::try_move_player(0, -1, &mut gs.ecs),
+                VirtualKeyCode::Up => Self::try_move_player(0, -1, &mut gs.ecs),
                 VirtualKeyCode::Numpad9 => Self::try_move_player(1, -1, &mut gs.ecs),
                 _ => {
                     return RunState::Paused;
