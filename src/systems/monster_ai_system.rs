@@ -17,7 +17,7 @@ impl<'a> System<'a> for MonsterAI {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_pos, mut viewsheds, monsters, names, mut positions) = data;
+        let (map, player_pos, mut viewsheds, monsters, names, mut positions) = data;
 
         for (mut viewshed, _monster, name, mut pos) in
             (&mut viewsheds, &monsters, &names, &mut positions).join()
@@ -28,12 +28,12 @@ impl<'a> System<'a> for MonsterAI {
                 let path = rltk::a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32,
                     map.xy_idx(player_pos.x, player_pos.y) as i32,
-                    &mut *map,
+                    &*map,
                 );
 
                 if path.success && path.steps.len() > 1 {
-                    pos.x = path.steps[1] % map.width;
-                    pos.y = path.steps[1] / map.width;
+                    pos.x = path.steps[1] as i32 % map.width;
+                    pos.y = path.steps[1] as i32 / map.width;
                     viewshed.dirty = true;
                 }
             }
