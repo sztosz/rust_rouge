@@ -1,18 +1,13 @@
 use crate::components::{Player, Position, Renderable, Viewshed};
 use crate::map::{Map, TileType};
-use crate::systems::VisibilitySystem;
-use rltk::{Console, GameState, Rltk, VirtualKeyCode};
-use specs::prelude::*;
-use std::cmp::{max, min};
-
-pub struct State {
-    pub(crate) ecs: World,
-}
-
+use crate::systems::{MonsterAI, VisibilitySystem};
+use rltk::{Console, GameState, Point, Rltk, VirtualKeyCode};
 impl State {
     fn run_systems(&mut self) {
         let mut visibility_system = VisibilitySystem {};
         visibility_system.run_now(&self.ecs);
+        let mut monster_ai = MonsterAI {};
+        monster_ai.run_now(&self.ecs);
         self.ecs.maintain();
     }
 
@@ -29,13 +24,19 @@ impl State {
                 pos.y = min(49, max(0, pos.y + delta_y));
 
                 viewshed.dirty = true;
+
+                let mut player_position = ecs.write_resource::<Point>();
+                player_position.x = pos.x;
+                player_position.y = pos.y;
             }
         }
     }
 
-    fn player_input(gs: &mut State, ctx: &mut Rltk) {
+    fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
         match ctx.key {
-            None => {}
+            None => {
+                return RunState::Paused;
+            }
             Some(key) => match key {
                 VirtualKeyCode::Numpad1 => Self::try_move_player(-1, 1, &mut gs.ecs),
                 VirtualKeyCode::Numpad2 => Self::try_move_player(0, 1, &mut gs.ecs),
@@ -45,17 +46,38 @@ impl State {
                 VirtualKeyCode::Numpad8 => Self::try_move_player(0, -1, &mut gs.ecs),
                 VirtualKeyCode::Numpad7 => Self::try_move_player(-1, -1, &mut gs.ecs),
                 VirtualKeyCode::Numpad9 => Self::try_move_player(1, -1, &mut gs.ecs),
-                _ => {}
+                _ => {
+                    return RunState::Paused;
+                }
             },
         }
+        RunState::Running
     }
+}
+use specs::prelude::*;
+
+use std::cmp::{max, min};
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    Paused,
+    Running,
+}
+
+pub struct State {
+    pub ecs: World,
+    pub runstate: RunState,
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
-        State::player_input(self, ctx);
-        self.run_systems();
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused
+        } else {
+            self.runstate = Self::player_input(self, ctx)
+        }
         let mut map = self.ecs.fetch_mut::<Map>();
 
         map.draw(ctx);
