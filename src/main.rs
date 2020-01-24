@@ -8,7 +8,10 @@ mod rect;
 mod state;
 mod systems;
 
-use crate::components::{Monster, Name, Player, Position, Renderable, Viewshed};
+use crate::components::{
+    BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, SufferDamage, Viewshed,
+    WantsToMelee,
+};
 use crate::map::Map;
 use crate::state::{RunState, State};
 
@@ -20,16 +23,19 @@ extern crate specs_derive;
 
 fn main() {
     let context = Rltk::init_simple8x8(WIDTH as u32, HEIGHT as u32, "RLTK Rouge", "resources");
-    let mut gs = State {
-        ecs: World::new(),
-        runstate: RunState::Running,
-    };
+    let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<Monster>();
     gs.ecs.register::<Name>();
+    gs.ecs.register::<BlocksTile>();
+    gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<WantsToMelee>();
+    gs.ecs.register::<SufferDamage>();
+
+    gs.ecs.insert(RunState::PreRun);
 
     let mut map = Map::new_map_with_rooms_and_corridors(WIDTH, HEIGHT);
     let (player_x, player_y) = map.rooms[0].center();
@@ -61,12 +67,20 @@ fn main() {
             .with(Name {
                 name: format!("{} #{}", &name, i),
             })
+            .with(BlocksTile {})
+            .with(CombatStats {
+                max_hp: 16,
+                hp: 16,
+                defense: 1,
+                power: 4,
+            })
             .build();
     }
 
     gs.ecs.insert(map);
 
-    gs.ecs
+    let player_entity = gs
+        .ecs
         .create_entity()
         .with(Position {
             x: player_x,
@@ -83,8 +97,18 @@ fn main() {
             range: 8,
             dirty: true,
         })
+        .with(Name {
+            name: "Player".to_string(),
+        })
+        .with(CombatStats {
+            max_hp: 30,
+            hp: 30,
+            defense: 2,
+            power: 5,
+        })
         .build();
 
+    gs.ecs.insert(player_entity);
     gs.ecs.insert(Point::new(player_x, player_y));
 
     rltk::main_loop(context, gs)

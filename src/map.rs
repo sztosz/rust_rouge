@@ -1,5 +1,6 @@
 use crate::rect::Rect;
 use rltk::{Algorithm2D, BaseMap, Console, Point, RandomNumberGenerator, Rltk, RGB};
+use specs::Entity;
 use std::cmp::{max, min};
 
 #[derive(PartialEq, Copy, Clone)]
@@ -16,6 +17,8 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
+    pub tile_content: Vec<Vec<Entity>>,
 }
 
 impl Map {
@@ -59,6 +62,8 @@ impl Map {
             height,
             revealed_tiles: vec![false; dimensions],
             visible_tiles: vec![false; dimensions],
+            blocked: vec![false; dimensions],
+            tile_content: vec![Vec::new(); dimensions],
         }
     }
 
@@ -100,12 +105,24 @@ impl Map {
         map
     }
 
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
+    }
+
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
+
     fn is_exit_valid(&self, x: i32, y: i32) -> bool {
         if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
             return false;
         }
         let idx = self.xy_idx(x, y);
-        self.tiles[idx as usize] != TileType::Wall
+        !self.blocked[idx]
     }
 
     pub fn draw(&mut self, ctx: &mut Rltk) {
@@ -149,20 +166,6 @@ impl Algorithm2D for Map {
             y: self.height,
         }
     }
-    //    fn point2d_to_index(&self, pt: Point) -> usize {
-    //        (pt.y * self.width) + pt.x
-    //    }
-    //
-    //    fn index_to_point2d(&self, idx: i32) -> Point {
-    //        Point {
-    //            x: idx % self.width,
-    //            y: idx / self.width,
-    //        }
-    //    }
-    //
-    //    fn in_bounds(&self, pos: Point) -> bool {
-    //        pos.x > 0 && pos.x < self.width - 1 && pos.y > 0 && pos.y < self.height - 1
-    //    }
 }
 
 impl BaseMap for Map {

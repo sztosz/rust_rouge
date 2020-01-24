@@ -8,5 +8,9 @@ edition = "2018"
 
 [dependencies]
 rltk = "0.6.0"
-specs = "0.15.0"
+specs = "0.15.1"
 specs-derive = "0.4.0"
+shred = "0.9.0"
+
+[features]
+default = ["shred/nightly"]
