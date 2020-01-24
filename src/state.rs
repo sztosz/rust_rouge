@@ -136,29 +136,24 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
-        let mut newrunstate;
-        {
-            let runstate = self.ecs.fetch::<RunState>();
-            newrunstate = *runstate;
-        }
 
-        match newrunstate {
+        let runstate = *self.ecs.fetch::<RunState>();
+
+        let newrunstate = match runstate {
             RunState::PreRun => {
                 self.run_systems();
-                newrunstate = RunState::AwaitingInput;
+                RunState::AwaitingInput
             }
-            RunState::AwaitingInput => {
-                newrunstate = Self::player_input(self, ctx);
-            }
+            RunState::AwaitingInput => Self::player_input(self, ctx),
             RunState::PlayerTurn => {
                 self.run_systems();
-                newrunstate = RunState::MonsterTurn;
+                RunState::MonsterTurn
             }
             RunState::MonsterTurn => {
                 self.run_systems();
-                newrunstate = RunState::AwaitingInput;
+                RunState::AwaitingInput
             }
-        }
+        };
 
         {
             let mut runwriter = self.ecs.write_resource::<RunState>();

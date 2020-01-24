@@ -17,7 +17,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, wants_to_melee, names, combat_stats, mut inflict_damage) = data;
+        let (entities, mut wants_to_melee, names, combat_stats, mut inflict_damage) = data;
 
         for (_entity, wants_to_melee, name, attacker_stats) in
             (&entities, &wants_to_melee, &names, &combat_stats).join()
@@ -46,5 +46,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 }
             }
         }
+
+        wants_to_melee.clear();
     }
 }
