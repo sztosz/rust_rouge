@@ -7,6 +7,7 @@ use rltk::{console, Console, GameState, Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use std::cmp::{max, min};
+use crate::gui;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -171,5 +172,7 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
             }
         }
+
+        gui::draw_ui(&self.ecs, ctx);
     }
 }

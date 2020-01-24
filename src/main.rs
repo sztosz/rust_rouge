@@ -3,6 +3,7 @@ use rltk::{Point, Rltk, RGB};
 use specs::prelude::*;
 
 mod components;
+mod gui;
 mod map;
 mod rect;
 mod state;
@@ -15,14 +16,20 @@ use crate::components::{
 use crate::map::Map;
 use crate::state::{RunState, State};
 
-const WIDTH: i32 = 80;
-const HEIGHT: i32 = 50;
+const MAP_WIDTH: i32 = 80;
+const MAP_HEIGHT: i32 = 50;
+const UI_HEIGHT: i32 = 10;
 
 #[macro_use]
 extern crate specs_derive;
 
 fn main() {
-    let context = Rltk::init_simple8x8(WIDTH as u32, HEIGHT as u32, "RLTK Rouge", "resources");
+    let context = Rltk::init_simple8x8(
+        MAP_WIDTH as u32,
+        (MAP_HEIGHT + UI_HEIGHT) as u32,
+        "RLTK Rouge",
+        "resources",
+    );
     let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -37,7 +44,7 @@ fn main() {
 
     gs.ecs.insert(RunState::PreRun);
 
-    let mut map = Map::new_map_with_rooms_and_corridors(WIDTH, HEIGHT);
+    let mut map = Map::new_map_with_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
 
     let mut rng = rltk::RandomNumberGenerator::new();

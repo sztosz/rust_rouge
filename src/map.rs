@@ -1,4 +1,5 @@
 use crate::rect::Rect;
+use crate::{MAP_HEIGHT, MAP_WIDTH};
 use rltk::{Algorithm2D, BaseMap, Console, Point, RandomNumberGenerator, Rltk, RGB};
 use specs::Entity;
 use std::cmp::{max, min};
@@ -53,13 +54,13 @@ impl Map {
         }
     }
 
-    pub fn new(width: i32, height: i32) -> Map {
-        let dimensions = (width * height) as usize;
+    pub fn new() -> Map {
+        let dimensions = (MAP_HEIGHT * MAP_WIDTH) as usize;
         Map {
             tiles: vec![TileType::Wall; dimensions],
             rooms: Vec::new(),
-            width,
-            height,
+            width: MAP_WIDTH,
+            height: MAP_HEIGHT,
             revealed_tiles: vec![false; dimensions],
             visible_tiles: vec![false; dimensions],
             blocked: vec![false; dimensions],
@@ -67,8 +68,8 @@ impl Map {
         }
     }
 
-    pub fn new_map_with_rooms_and_corridors(width: i32, height: i32) -> Map {
-        let mut map = Self::new(width, height);
+    pub fn new_map_with_rooms_and_corridors() -> Map {
+        let mut map = Self::new();
 
         const MAX_ROOMS: i32 = 30;
         const MIN_SIZE: i32 = 6;
@@ -77,8 +78,8 @@ impl Map {
         for _i in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);
             let h = rng.range(MIN_SIZE, MAX_SIZE);
-            let x = rng.roll_dice(1, width - w - 1) - 1;
-            let y = rng.roll_dice(1, height - h - 1) - 1;
+            let x = rng.roll_dice(1, MAP_WIDTH - w - 1) - 1;
+            let y = rng.roll_dice(1, MAP_HEIGHT - h - 1) - 1;
             let new_room = Rect::new(x, y, w, h);
             let mut ok = true;
             for other_room in map.rooms.iter() {
