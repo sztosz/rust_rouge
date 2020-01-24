@@ -3,12 +3,13 @@ use rltk::{Point, Rltk, RGB};
 use specs::prelude::*;
 
 mod components;
+mod game_log;
 mod gui;
 mod map;
+mod player;
 mod rect;
 mod state;
 mod systems;
-mod game_log;
 
 use crate::components::{
     BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, SufferDamage, Viewshed,
@@ -44,7 +45,9 @@ fn main() {
     gs.ecs.register::<SufferDamage>();
 
     gs.ecs.insert(RunState::PreRun);
-    gs.ecs.insert(game_log::GameLog{entries: vec!["Welcome!".to_string()]});
+    gs.ecs.insert(game_log::GameLog {
+        entries: vec!["Welcome!".to_string()],
+    });
 
     let mut map = Map::new_map_with_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
