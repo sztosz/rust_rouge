@@ -26,12 +26,13 @@ const UI_HEIGHT: i32 = 10;
 extern crate specs_derive;
 
 fn main() {
-    let context = Rltk::init_simple8x8(
+    let mut context = Rltk::init_simple8x8(
         MAP_WIDTH as u32,
         (MAP_HEIGHT + UI_HEIGHT) as u32,
         "RLTK Rouge",
         "resources",
     );
+    context.with_post_scanlines(true);
     let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();

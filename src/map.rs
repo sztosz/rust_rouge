@@ -126,7 +126,7 @@ impl Map {
         !self.blocked[idx]
     }
 
-    pub fn draw(&mut self, ctx: &mut Rltk) {
+    pub fn draw(&self, ctx: &mut Rltk) {
         let mut x = 0;
         let mut y = 0;
 

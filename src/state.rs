@@ -95,7 +95,7 @@ impl GameState for State {
             *runwriter = newrunstate;
         }
         Self::remove_the_dead(self);
-        let mut map = self.ecs.fetch_mut::<Map>();
+        let map = self.ecs.fetch::<Map>();
 
         map.draw(ctx);
         let positions = self.ecs.read_storage::<Position>();
