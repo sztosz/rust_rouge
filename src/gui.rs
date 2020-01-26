@@ -1,6 +1,5 @@
 use crate::components::{CombatStats, Name, Player, Position};
 use crate::game_log::GameLog;
-use crate::map::Map;
 use crate::{MAP_HEIGHT, MAP_WIDTH, UI_HEIGHT};
 use rltk::{Console, Point, Rltk, RGB};
 use specs::prelude::*;
@@ -51,11 +50,10 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
 }
 
 fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
-    let map = ecs.fetch::<Map>();
     let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
     let mouse_pos = ctx.mouse_pos();
-    if mouse_pos.0 <= map.width || mouse_pos.1 <= map.height {
+    if mouse_pos.0 <= MAP_WIDTH || mouse_pos.1 <= MAP_HEIGHT {
         let mut tooltip = Vec::new();
         for (name, position) in (&names, &positions).join() {
             if position.x == mouse_pos.0 && position.y == mouse_pos.1 {
