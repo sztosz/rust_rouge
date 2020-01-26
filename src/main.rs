@@ -54,8 +54,7 @@ fn main() {
     let (player_x, player_y) = map.rooms[0].center();
 
     for room in map.rooms.iter_mut().skip(1) {
-        let (x, y) = room.center();
-        spawner::random_monster(&mut state.ecs, x, y);
+        Map::populate_room(&mut state.ecs, room);
     }
 
     state.ecs.insert(map);
