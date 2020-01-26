@@ -1,16 +1,15 @@
 use crate::rect::Rect;
+use crate::spawner::random_monster;
 use crate::{MAP_HEIGHT, MAP_WIDTH};
 use rltk::{Algorithm2D, BaseMap, Console, Point, RandomNumberGenerator, Rltk, RGB};
 use specs::{Entity, World, WorldExt};
 use std::cmp::{max, min};
-use crate::spawner::random_monster;
 
 const MAX_ROOMS: i32 = 30;
 const MIN_SIZE: i32 = 6;
 const MAX_SIZE: i32 = 10;
 const MAX_MONSTERS_PER_ROOM: i32 = 4;
 const MAX_ITEMS_PER_ROOM: i32 = 1;
-
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -32,40 +31,31 @@ pub struct Map {
 
 impl Map {
     pub fn draw(&self, ctx: &mut Rltk) {
-        let mut x = 0;
-        let mut y = 0;
+        let visible = RGB::from_u8(192, 192, 192);
+        let memory = RGB::from_u8(105, 105, 105);
+        let bg = RGB::from_f32(0.0, 0.0, 0.0);
+        let wall = rltk::to_cp437('#');
+        let floor = rltk::to_cp437('.');
 
         for (idx, tile) in self.tiles.iter().enumerate() {
             if self.revealed_tiles[idx] {
-                let glyph;
-                let mut fg;
-                match tile {
-                    TileType::Floor => {
-                        fg = RGB::from_f32(0.0, 0.5, 0.5);
-                        glyph = rltk::to_cp437('.');
-                    }
-
-                    TileType::Wall => {
-                        fg = RGB::from_f32(0.0, 1.0, 0.0);
-                        glyph = rltk::to_cp437('#');
-                    }
-                }
-                if !self.visible_tiles[idx] {
-                    fg = fg.to_greyscale()
-                }
-                ctx.set(x, y, fg, RGB::from_f32(0.0, 0.0, 0.0), glyph);
-            }
-
-            x += 1;
-            if x > self.width - 1 {
-                x = 0;
-                y += 1;
+                let fg = if self.visible_tiles[idx] { visible } else { memory };
+                let glyph = match tile {
+                    TileType::Floor => floor,
+                    TileType::Wall => wall,
+                };
+                let (x, y) = self.idx_to_xy(idx);
+                ctx.set(x, y, fg, bg, glyph);
             }
         }
     }
 
-    pub fn xy_idx(&self, x: i32, y: i32) -> usize {
+    pub fn xy_to_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
+    }
+
+    pub fn idx_to_xy(&self, idx: usize) -> (i32, i32) {
+        (idx as i32 % self.width, idx as i32 / self.width)
     }
 
     pub fn new() -> Map {
@@ -84,7 +74,6 @@ impl Map {
 
     pub fn new_map_with_rooms_and_corridors() -> Map {
         let mut map = Self::new();
-
 
         let mut rng = RandomNumberGenerator::new();
         for _i in 0..MAX_ROOMS {
@@ -142,7 +131,7 @@ impl Map {
 
         for idx in monster_spawn_points.iter() {
             let x = idx % MAP_WIDTH;
-            let y = idx /MAP_WIDTH;
+            let y = idx / MAP_WIDTH;
             random_monster(ecs, x, y);
         }
     }
@@ -163,14 +152,14 @@ impl Map {
         if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
             return false;
         }
-        let idx = self.xy_idx(x, y);
+        let idx = self.xy_to_idx(x, y);
         !self.blocked[idx]
     }
 
     fn apply_room_to_map(&mut self, room: &Rect) {
         for y in room.y1 + 1..=room.y2 {
             for x in room.x1 + 1..=room.x2 {
-                let idx = self.xy_idx(x, y);
+                let idx = self.xy_to_idx(x, y);
                 self.tiles[idx] = TileType::Floor;
             }
         }
@@ -178,7 +167,7 @@ impl Map {
 
     fn apply_horizontal_tunnel(&mut self, x1: i32, x2: i32, y: i32) {
         for x in min(x1, x2)..=max(x1, x2) {
-            let idx = self.xy_idx(x, y);
+            let idx = self.xy_to_idx(x, y);
             if idx > 0 && idx < (self.width * self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor
             }
@@ -187,14 +176,12 @@ impl Map {
 
     fn apply_vertical_tunnel(&mut self, y1: i32, y2: i32, x: i32) {
         for y in min(y1, y2)..=max(y1, y2) {
-            let idx = self.xy_idx(x, y);
+            let idx = self.xy_to_idx(x, y);
             if idx > 0 && idx < (self.width * self.height) as usize {
                 self.tiles[idx as usize] = TileType::Floor
             }
         }
     }
-
-
 }
 
 impl Algorithm2D for Map {

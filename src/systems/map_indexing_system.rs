@@ -17,7 +17,7 @@ impl<'a> System<'a> for MapIndexingSystem {
         map.populate_blocked();
         map.clear_content_index();
         for (entity, position) in (&entities, &positions).join() {
-            let idx = map.xy_idx(position.x, position.y);
+            let idx = map.xy_to_idx(position.x, position.y);
             let p: Option<&BlocksTile> = blockers.get(entity);
             if let Some(_p) = p {
                 map.blocked[idx] = true;
