@@ -78,22 +78,10 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
                 let left_x = mouse_pos.0 - width as i32;
                 let mut y = mouse_pos.1;
                 for string in tooltip.iter() {
-                    ctx.print_color(
-                        left_x,
-                        y,
-                        RGB::named(rltk::WHITE),
-                        RGB::named(rltk::GRAY),
-                        string,
-                    );
+                    ctx.print_color(left_x, y, RGB::named(rltk::WHITE), RGB::named(rltk::GRAY), string);
                     let padding = width - string.len() - 1;
                     for i in 0..padding as i32 {
-                        ctx.print_color(
-                            arrow_pos.x - i,
-                            y,
-                            RGB::named(rltk::WHITE),
-                            RGB::named(rltk::GRAY),
-                            " ",
-                        );
+                        ctx.print_color(arrow_pos.x - i, y, RGB::named(rltk::WHITE), RGB::named(rltk::GRAY), " ");
                     }
                     y += 1
                 }
@@ -110,13 +98,7 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
                 let left_x = mouse_pos.0 + 3;
                 let mut y = mouse_pos.1;
                 for string in tooltip.iter() {
-                    ctx.print_color(
-                        left_x + 1,
-                        y,
-                        RGB::named(rltk::WHITE),
-                        RGB::named(rltk::GRAY),
-                        string,
-                    );
+                    ctx.print_color(left_x + 1, y, RGB::named(rltk::WHITE), RGB::named(rltk::GRAY), string);
                     let padding = width - string.len() - 1;
                     for i in 0..padding as i32 {
                         ctx.print_color(

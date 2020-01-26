@@ -1,9 +1,7 @@
 use crate::components::{CombatStats, Name, Player, Position, Renderable};
 use crate::game_log::GameLog;
 use crate::map::Map;
-use crate::systems::{
-    DamageSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI, VisibilitySystem,
-};
+use crate::systems::{DamageSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI, VisibilitySystem};
 use crate::{gui, player};
 use rltk::{Console, GameState, Rltk};
 use specs::prelude::*;
@@ -49,10 +47,8 @@ impl State {
                     match player {
                         None => {
                             let victim_name = names.get(entity);
-                            log.entries.insert(
-                                0,
-                                format!("{} is dead", &victim_name.expect("Missing name").name),
-                            );
+                            log.entries
+                                .insert(0, format!("{} is dead", &victim_name.expect("Missing name").name));
                             dead.push(entity)
                         }
                         Some(_) => log.entries.insert(0, "You are dead".to_string()),
@@ -61,9 +57,7 @@ impl State {
             }
         }
         for victim in dead {
-            self.ecs
-                .delete_entity(victim)
-                .expect("Could not delete dead entity");
+            self.ecs.delete_entity(victim).expect("Could not delete dead entity");
         }
     }
 }

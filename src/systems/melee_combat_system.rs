@@ -35,15 +35,11 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         None => DEBUG_NAME,
                     };
                     if damage == 0 {
-                        log.entries.insert(
-                            0,
-                            format!("{} is unable to hurt {}", &name.name, victim_name),
-                        )
+                        log.entries
+                            .insert(0, format!("{} is unable to hurt {}", &name.name, victim_name))
                     } else {
-                        log.entries.insert(
-                            0,
-                            format!("{} hits {}, for {} hp.", &name.name, victim_name, damage),
-                        );
+                        log.entries
+                            .insert(0, format!("{} hits {}, for {} hp.", &name.name, victim_name, damage));
                         inflict_damage
                             .insert(wants_to_melee.target, SufferDamage { amount: damage })
                             .expect("Could not inflict damage");

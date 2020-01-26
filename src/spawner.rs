@@ -1,6 +1,4 @@
-use crate::components::{
-    BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, Viewshed,
-};
+use crate::components::{BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, Viewshed};
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
@@ -66,9 +64,7 @@ fn monster(ecs: &mut World, x: i32, y: i32, glyph: u8, name: &str) {
             dirty: true,
         })
         .with(Monster {})
-        .with(Name {
-            name: name.to_string(),
-        })
+        .with(Name { name: name.to_string() })
         .with(BlocksTile {})
         .with(CombatStats {
             max_hp: 16,

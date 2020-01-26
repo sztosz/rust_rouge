@@ -13,8 +13,7 @@ mod state;
 mod systems;
 
 use crate::components::{
-    BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, SufferDamage, Viewshed,
-    WantsToMelee,
+    BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, SufferDamage, Viewshed, WantsToMelee,
 };
 use crate::map::Map;
 use crate::state::{RunState, State};
@@ -27,13 +26,12 @@ const UI_HEIGHT: i32 = 10;
 extern crate specs_derive;
 
 fn main() {
-    let mut context = Rltk::init_simple8x8(
+    let context = Rltk::init_simple8x8(
         MAP_WIDTH as u32,
         (MAP_HEIGHT + UI_HEIGHT) as u32,
         "RLTK Rouge",
         "resources",
     );
-    context.with_post_scanlines(true);
     let mut state = State { ecs: World::new() };
     state.ecs.register::<Position>();
     state.ecs.register::<Renderable>();
@@ -57,7 +55,6 @@ fn main() {
 
     for room in map.rooms.iter_mut().skip(1) {
         let (x, y) = room.center();
-
         spawner::random_monster(&mut state.ecs, x, y);
     }
 
