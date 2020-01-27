@@ -1,4 +1,4 @@
-use crate::components::{BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, Viewshed};
+use crate::components::{BlocksTile, CombatStats, Item, Monster, Name, Player, Position, Potion, Renderable, Viewshed};
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
@@ -72,5 +72,21 @@ fn monster(ecs: &mut World, x: i32, y: i32, glyph: u8, name: &str) {
             defense: 1,
             power: 4,
         })
+        .build();
+}
+
+pub fn health_potion(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437(';'),
+            fg: RGB::named(rltk::MAGENTA),
+            bg: RGB::named(rltk::BLACK),
+        })
+        .with(Name {
+            name: "Health Potion".to_string(),
+        })
+        .with(Item {})
+        .with(Potion { heal_amount: 8 })
         .build();
 }

@@ -1,7 +1,9 @@
 use crate::components::{CombatStats, Name, Player, Position, Renderable};
 use crate::game_log::GameLog;
 use crate::map::Map;
-use crate::systems::{DamageSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI, VisibilitySystem};
+use crate::systems::{
+    DamageSystem, ItemCollectionSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI, VisibilitySystem,
+};
 use crate::{gui, player};
 use rltk::{Console, GameState, Rltk};
 use specs::prelude::*;
@@ -12,6 +14,7 @@ pub enum RunState {
     PreRun,
     PlayerTurn,
     MonsterTurn,
+    ShowInventory,
 }
 
 pub struct State {
@@ -30,6 +33,8 @@ impl State {
         melee_combat_system.run_now(&self.ecs);
         let mut damage_system = DamageSystem {};
         damage_system.run_now(&self.ecs);
+        let mut item_collection_system = ItemCollectionSystem {};
+        item_collection_system.run_now(&self.ecs);
         self.ecs.maintain();
     }
 
@@ -64,7 +69,25 @@ impl State {
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
+        Self::remove_the_dead(self);
+
         ctx.cls();
+
+        {
+            let map = self.ecs.fetch::<Map>();
+            map.draw(ctx);
+
+            let positions = self.ecs.read_storage::<Position>();
+            let renderables = self.ecs.read_storage::<Renderable>();
+            for (pos, render) in (&positions, &renderables).join() {
+                let idx = map.xy_to_idx(pos.x, pos.y);
+                if map.visible_tiles[idx] {
+                    ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
+                }
+            }
+        }
+
+        gui::draw_ui(&self.ecs, ctx);
 
         let runstate = *self.ecs.fetch::<RunState>();
 
@@ -82,25 +105,18 @@ impl GameState for State {
                 self.run_systems();
                 RunState::AwaitingInput
             }
+            RunState::ShowInventory => {
+                if gui::draw_inventory(self, ctx) == gui::ItemMenuResult::Cancel {
+                    RunState::AwaitingInput
+                } else {
+                    RunState::ShowInventory
+                }
+            }
         };
 
         {
             let mut runwriter = self.ecs.write_resource::<RunState>();
             *runwriter = newrunstate;
         }
-        Self::remove_the_dead(self);
-        let map = self.ecs.fetch::<Map>();
-
-        map.draw(ctx);
-        let positions = self.ecs.read_storage::<Position>();
-        let renderables = self.ecs.read_storage::<Renderable>();
-        for (pos, render) in (&positions, &renderables).join() {
-            let idx = map.xy_to_idx(pos.x, pos.y);
-            if map.visible_tiles[idx] {
-                ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
-            }
-        }
-
-        gui::draw_ui(&self.ecs, ctx);
     }
 }
