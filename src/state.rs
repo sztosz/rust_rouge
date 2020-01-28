@@ -1,8 +1,9 @@
-use crate::components::{CombatStats, Name, Player, Position, Renderable};
+use crate::components::{CombatStats, Name, Player, Position, Renderable, WantsToDrinkPotion, WantsToDropItem};
 use crate::game_log::GameLog;
 use crate::map::Map;
 use crate::systems::{
-    DamageSystem, ItemCollectionSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI, VisibilitySystem,
+    DamageSystem, ItemCollectionSystem, ItemDropSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI,
+    PotionUseSystem, VisibilitySystem,
 };
 use crate::{gui, player};
 use rltk::{Console, GameState, Rltk};
@@ -15,6 +16,7 @@ pub enum RunState {
     PlayerTurn,
     MonsterTurn,
     ShowInventory,
+    ShowDropItem,
 }
 
 pub struct State {
@@ -35,6 +37,10 @@ impl State {
         damage_system.run_now(&self.ecs);
         let mut item_collection_system = ItemCollectionSystem {};
         item_collection_system.run_now(&self.ecs);
+        let mut potion_use_system = PotionUseSystem {};
+        potion_use_system.run_now(&self.ecs);
+        let mut item_drop_items = ItemDropSystem {};
+        item_drop_items.run_now(&self.ecs);
         self.ecs.maintain();
     }
 
@@ -106,10 +112,33 @@ impl GameState for State {
                 RunState::AwaitingInput
             }
             RunState::ShowInventory => {
-                if gui::draw_inventory(self, ctx) == gui::ItemMenuResult::Cancel {
-                    RunState::AwaitingInput
-                } else {
-                    RunState::ShowInventory
+                let (result, entity) = gui::draw_show_inventory_item_menu(self, ctx);
+                match result {
+                    gui::ItemMenuResult::Cancel => RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => RunState::ShowInventory,
+                    gui::ItemMenuResult::Selected => {
+                        let potion = entity.unwrap();
+                        let mut wants_to_drink_potion = self.ecs.write_storage::<WantsToDrinkPotion>();
+                        wants_to_drink_potion
+                            .insert(*self.ecs.fetch::<Entity>(), WantsToDrinkPotion { potion })
+                            .expect("Unable to insert potion to wants_to_use_potion");
+                        RunState::PlayerTurn
+                    }
+                }
+            }
+            RunState::ShowDropItem => {
+                let (result, entity) = gui::draw_drop_item_menu(self, ctx);
+                match result {
+                    gui::ItemMenuResult::Cancel => RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => RunState::ShowDropItem,
+                    gui::ItemMenuResult::Selected => {
+                        let item = entity.unwrap();
+                        let mut wants_to_drop_potion = self.ecs.write_storage::<WantsToDropItem>();
+                        wants_to_drop_potion
+                            .insert(*self.ecs.fetch::<Entity>(), WantsToDropItem { item })
+                            .expect("Unable to insert potion to wants_to_drop_potion");
+                        RunState::PlayerTurn
+                    }
                 }
             }
         };

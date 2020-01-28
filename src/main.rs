@@ -14,7 +14,7 @@ mod systems;
 
 use crate::components::{
     BlocksTile, CombatStats, InBackpack, Item, Monster, Name, Player, Position, Potion, Renderable, SufferDamage,
-    Viewshed, WantsToMelee, WantsToPickupItem,
+    Viewshed, WantsToDrinkPotion, WantsToDropItem, WantsToMelee, WantsToPickupItem,
 };
 use crate::map::Map;
 use crate::state::{RunState, State};
@@ -48,6 +48,8 @@ fn main() {
     state.ecs.register::<Potion>();
     state.ecs.register::<InBackpack>();
     state.ecs.register::<WantsToPickupItem>();
+    state.ecs.register::<WantsToDrinkPotion>();
+    state.ecs.register::<WantsToDropItem>();
 
     state.ecs.insert(RunState::PreRun);
     state.ecs.insert(game_log::GameLog {

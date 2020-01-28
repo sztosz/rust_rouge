@@ -63,6 +63,7 @@ pub fn player_input(game_state: &mut State, ctx: &mut Rltk) -> RunState {
             VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut game_state.ecs),
             VirtualKeyCode::G => get_item(&mut game_state.ecs),
             VirtualKeyCode::I => return RunState::ShowInventory,
+            VirtualKeyCode::D => return RunState::ShowDropItem,
             _ => return RunState::AwaitingInput,
         },
     }

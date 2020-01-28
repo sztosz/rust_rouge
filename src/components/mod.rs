@@ -1,7 +1,7 @@
 use rltk::RGB;
 use specs::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
@@ -72,5 +72,14 @@ pub struct InBackpack {
 #[derive(Component, Debug, Clone)]
 pub struct WantsToPickupItem {
     pub collected_by: Entity,
+    pub item: Entity,
+}
+
+#[derive(Component, Debug)]
+pub struct WantsToDrinkPotion {
+    pub potion: Entity,
+}
+#[derive(Component, Debug)]
+pub struct WantsToDropItem {
     pub item: Entity,
 }

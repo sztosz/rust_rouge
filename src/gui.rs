@@ -130,7 +130,7 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
     }
 }
 
-pub fn draw_inventory(game_state: &mut State, ctx: &mut Rltk) -> ItemMenuResult {
+pub fn draw_inventory_menu(game_state: &mut State, ctx: &mut Rltk, title: &str) -> (ItemMenuResult, Option<Entity>) {
     let white = RGB::named(rltk::WHITE);
     let black = RGB::named(rltk::BLACK);
     let yellow = RGB::named(rltk::YELLOW);
@@ -138,6 +138,7 @@ pub fn draw_inventory(game_state: &mut State, ctx: &mut Rltk) -> ItemMenuResult 
     let player_entity = game_state.ecs.fetch::<Entity>();
     let names = game_state.ecs.read_storage::<Name>();
     let in_backpack = game_state.ecs.read_storage::<InBackpack>();
+    let entities = game_state.ecs.entities();
 
     let count = (&in_backpack, &names)
         .join()
@@ -148,24 +149,42 @@ pub fn draw_inventory(game_state: &mut State, ctx: &mut Rltk) -> ItemMenuResult 
     let x = 10;
 
     ctx.draw_box(x, y, 31, count + 3, white, black);
-    ctx.print_color(x + 5, y, yellow, black, "Inventory");
+    ctx.print_color(x + 5, y, yellow, black, title);
     ctx.print_color(x + 5, y + count + 3, yellow, black, "ESCAPE to cancel");
 
-    for (i, (_in_backpack, name)) in (&in_backpack, &names)
+    let mut equippable = Vec::new();
+
+    for (i, (_in_backpack, entitiy, name)) in (&in_backpack, &entities, &names)
         .join()
         .filter(|item| item.0.owner == *player_entity)
         .enumerate()
     {
-        ctx.set(x + 1, y + 1 + i as i32, white, black, rltk::to_cp437('('));
-        ctx.set(x + 2, y + 1 + i as i32, yellow, black, 97 + i as u8);
-        ctx.set(x + 3, y + 1 + i as i32, white, black, rltk::to_cp437(')'));
+        ctx.set(x + 1, y + 2 + i as i32, white, black, rltk::to_cp437('('));
+        ctx.set(x + 2, y + 2 + i as i32, yellow, black, 97 + i as u8);
+        ctx.set(x + 3, y + 2 + i as i32, white, black, rltk::to_cp437(')'));
+        ctx.print(x + 5, y + 2 + i as i32, &name.name);
 
-        ctx.print(x + 5, y + 1 + i as i32, &name.name);
+        equippable.push(entitiy);
     }
 
     match ctx.key {
-        None => ItemMenuResult::NoResponse,
-        Some(VirtualKeyCode::Escape) => ItemMenuResult::Cancel,
-        Some(_) => ItemMenuResult::NoResponse,
+        None => (ItemMenuResult::NoResponse, None),
+        Some(VirtualKeyCode::Escape) => (ItemMenuResult::Cancel, None),
+        Some(key) => {
+            let selection = rltk::letter_to_option(key);
+            if selection > -1 && selection < count {
+                (ItemMenuResult::Selected, Some(equippable[selection as usize]))
+            } else {
+                (ItemMenuResult::NoResponse, None)
+            }
+        }
     }
+}
+
+pub fn draw_drop_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    draw_inventory_menu(game_state, ctx, "Drop Which Item?")
+}
+
+pub fn draw_show_inventory_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    draw_inventory_menu(game_state, ctx, "Inventory")
 }

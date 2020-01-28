@@ -5,7 +5,7 @@ mod melee_combat_system;
 mod monster_ai_system;
 mod visibility_system;
 pub use damage_system::DamageSystem;
-pub use inventory_management::ItemCollectionSystem;
+pub use inventory_management::{ItemCollectionSystem, ItemDropSystem, PotionUseSystem};
 pub use map_indexing_system::MapIndexingSystem;
 pub use melee_combat_system::MeleeCombatSystem;
 pub use monster_ai_system::MonsterAI;
