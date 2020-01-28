@@ -131,64 +131,36 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
 }
 
 pub fn draw_inventory(game_state: &mut State, ctx: &mut Rltk) -> ItemMenuResult {
+    let white = RGB::named(rltk::WHITE);
+    let black = RGB::named(rltk::BLACK);
+    let yellow = RGB::named(rltk::YELLOW);
+
     let player_entity = game_state.ecs.fetch::<Entity>();
     let names = game_state.ecs.read_storage::<Name>();
     let in_backpack = game_state.ecs.read_storage::<InBackpack>();
 
-    let inventory = (&in_backpack, &names)
-        .join()
-        .filter(|item| item.0.owner == *player_entity);
-
-    let count = inventory.count() as i32;
-
-    let mut y = 25 - (count / 2);
-    ctx.draw_box(
-        15,
-        y - 2,
-        31,
-        count + 3,
-        RGB::named(rltk::WHITE),
-        RGB::named(rltk::BLACK),
-    );
-    ctx.print_color(
-        18,
-        y - 2,
-        RGB::named(rltk::YELLOW),
-        RGB::named(rltk::BLACK),
-        "Inventory",
-    );
-    ctx.print_color(
-        18,
-        y + count,
-        RGB::named(rltk::YELLOW),
-        RGB::named(rltk::BLACK),
-        "ESCAPE to cancel",
-    );
-
-    let mut j = 0;
-    for (_in_backpack, name) in (&in_backpack, &names)
+    let count = (&in_backpack, &names)
         .join()
         .filter(|item| item.0.owner == *player_entity)
-    {
-        ctx.set(
-            17,
-            y,
-            RGB::named(rltk::WHITE),
-            RGB::named(rltk::BLACK),
-            rltk::to_cp437('('),
-        );
-        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97 + j as u8);
-        ctx.set(
-            19,
-            y,
-            RGB::named(rltk::WHITE),
-            RGB::named(rltk::BLACK),
-            rltk::to_cp437(')'),
-        );
+        .count() as i32;
 
-        ctx.print(21, y, &name.name);
-        y += 1;
-        j += 1;
+    let y = 10;
+    let x = 10;
+
+    ctx.draw_box(x, y, 31, count + 3, white, black);
+    ctx.print_color(x + 5, y, yellow, black, "Inventory");
+    ctx.print_color(x + 5, y + count + 3, yellow, black, "ESCAPE to cancel");
+
+    for (i, (_in_backpack, name)) in (&in_backpack, &names)
+        .join()
+        .filter(|item| item.0.owner == *player_entity)
+        .enumerate()
+    {
+        ctx.set(x + 1, y + 1 + i as i32, white, black, rltk::to_cp437('('));
+        ctx.set(x + 2, y + 1 + i as i32, yellow, black, 97 + i as u8);
+        ctx.set(x + 3, y + 1 + i as i32, white, black, rltk::to_cp437(')'));
+
+        ctx.print(x + 5, y + 1 + i as i32, &name.name);
     }
 
     match ctx.key {
