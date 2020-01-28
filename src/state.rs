@@ -2,8 +2,8 @@ use crate::components::{CombatStats, Name, Player, Position, Renderable, WantsTo
 use crate::game_log::GameLog;
 use crate::map::Map;
 use crate::systems::{
-    DamageSystem, ItemCollectionSystem, ItemDropSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI,
-    PotionUseSystem, VisibilitySystem,
+    DamageSystem, ItemCollectionSystem, ItemDropSystem, ItemUseSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI,
+    VisibilitySystem,
 };
 use crate::{gui, player};
 use rltk::{Console, GameState, Rltk};
@@ -37,8 +37,8 @@ impl State {
         damage_system.run_now(&self.ecs);
         let mut item_collection_system = ItemCollectionSystem {};
         item_collection_system.run_now(&self.ecs);
-        let mut potion_use_system = PotionUseSystem {};
-        potion_use_system.run_now(&self.ecs);
+        let mut item_use_system = ItemUseSystem {};
+        item_use_system.run_now(&self.ecs);
         let mut item_drop_items = ItemDropSystem {};
         item_drop_items.run_now(&self.ecs);
         self.ecs.maintain();

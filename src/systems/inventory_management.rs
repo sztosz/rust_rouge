@@ -1,11 +1,12 @@
 use crate::components::{
-    CombatStats, InBackpack, Name, Position, Potion, WantsToDrinkPotion, WantsToDropItem, WantsToPickupItem,
+    CombatStats, InBackpack, Name, Position, ProvidesHealing, WantsToDrinkPotion, WantsToDropItem,
+    WantsToPickupItem,
 };
 use crate::game_log::GameLog;
 use specs::prelude::*;
 
 pub struct ItemCollectionSystem {}
-pub struct PotionUseSystem {}
+pub struct ItemUseSystem {}
 pub struct ItemDropSystem {}
 
 impl<'a> System<'a> for ItemCollectionSystem {
@@ -44,7 +45,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
     }
 }
 
-impl<'a> System<'a> for PotionUseSystem {
+impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, Entity>,
@@ -52,23 +53,29 @@ impl<'a> System<'a> for PotionUseSystem {
         Entities<'a>,
         WriteStorage<'a, WantsToDrinkPotion>,
         ReadStorage<'a, Name>,
-        ReadStorage<'a, Potion>,
+        ReadStorage<'a, ProvidesHealing>,
         WriteStorage<'a, CombatStats>,
     );
     fn run(&mut self, system_data: Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_to_drink_potion, names, potions, mut combat_stats) =
-            system_data;
+        let (
+            player_entity,
+            mut gamelog,
+            entities,
+            mut wants_to_drink_potion,
+            names,
+            provides_healing,
+            mut combat_stats,
+        ) = system_data;
 
         for (entity, drink, stats, name) in (&entities, &wants_to_drink_potion, &mut combat_stats, &names).join() {
-            let potion = potions.get(drink.potion);
-            match potion {
+            match provides_healing.get(drink.potion) {
                 None => {}
-                Some(potion) => {
-                    stats.hp = i32::min(stats.max_hp, stats.hp + potion.heal_amount);
+                Some(healing) => {
+                    stats.hp = i32::min(stats.max_hp, stats.hp + healing.heal_amount);
                     if entity == *player_entity {
                         gamelog.entries.insert(
                             0,
-                            format!("You drink the {}, healing {}", name.name, potion.heal_amount),
+                            format!("You drink the {}, healing {}", name.name, healing.heal_amount),
                         )
                     }
                     entities.delete(drink.potion).expect("wants_to_drink removal failed")

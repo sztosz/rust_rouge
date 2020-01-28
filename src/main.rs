@@ -13,8 +13,8 @@ mod state;
 mod systems;
 
 use crate::components::{
-    BlocksTile, CombatStats, InBackpack, Item, Monster, Name, Player, Position, Potion, Renderable, SufferDamage,
-    Viewshed, WantsToDrinkPotion, WantsToDropItem, WantsToMelee, WantsToPickupItem,
+    BlocksTile, CombatStats, Consumable, InBackpack, Item, Monster, Name, Player, Position, ProvidesHealing,
+    Renderable, SufferDamage, Viewshed, WantsToDrinkPotion, WantsToDropItem, WantsToMelee, WantsToPickupItem,
 };
 use crate::map::Map;
 use crate::state::{RunState, State};
@@ -45,7 +45,8 @@ fn main() {
     state.ecs.register::<WantsToMelee>();
     state.ecs.register::<SufferDamage>();
     state.ecs.register::<Item>();
-    state.ecs.register::<Potion>();
+    state.ecs.register::<ProvidesHealing>();
+    state.ecs.register::<Consumable>();
     state.ecs.register::<InBackpack>();
     state.ecs.register::<WantsToPickupItem>();
     state.ecs.register::<WantsToDrinkPotion>();
