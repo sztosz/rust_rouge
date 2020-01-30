@@ -27,6 +27,7 @@ pub struct Map {
     pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
     pub tile_content: Vec<Vec<Entity>>,
+    pub dimensions: usize,
 }
 
 impl Map {
@@ -61,6 +62,7 @@ impl Map {
     pub fn new() -> Map {
         let dimensions = (MAP_HEIGHT * MAP_WIDTH) as usize;
         Map {
+            dimensions,
             tiles: vec![TileType::Wall; dimensions],
             rooms: Vec::new(),
             width: MAP_WIDTH,
