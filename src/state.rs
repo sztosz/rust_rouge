@@ -1,4 +1,4 @@
-use crate::components::{CombatStats, Name, Player, Position, Renderable, WantsToDrinkPotion, WantsToDropItem};
+use crate::components::{CombatStats, Name, Player, Position, Ranged, Renderable, WantsToDropItem, WantsToUseItem};
 use crate::game_log::GameLog;
 use crate::map::Map;
 use crate::systems::{
@@ -17,6 +17,7 @@ pub enum RunState {
     MonsterTurn,
     ShowInventory,
     ShowDropItem,
+    ShowTargeting { range: i32, item: Entity },
 }
 
 pub struct State {
@@ -119,12 +120,21 @@ impl GameState for State {
                     gui::ItemMenuResult::Cancel => RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => RunState::ShowInventory,
                     gui::ItemMenuResult::Selected => {
-                        let potion = entity.unwrap();
-                        let mut wants_to_drink_potion = self.ecs.write_storage::<WantsToDrinkPotion>();
-                        wants_to_drink_potion
-                            .insert(*self.ecs.fetch::<Entity>(), WantsToDrinkPotion { potion })
-                            .expect("Unable to insert potion to wants_to_use_potion");
-                        RunState::PlayerTurn
+                        let item = entity.unwrap();
+                        let is_ranged = self.ecs.read_storage::<Ranged>();
+                        let is_item_ranged = is_ranged.get(item);
+                        if let Some(is_item_ranged) = is_item_ranged {
+                            RunState::ShowTargeting {
+                                range: is_item_ranged.range,
+                                item,
+                            }
+                        } else {
+                            let mut wants_to_use_item = self.ecs.write_storage::<WantsToUseItem>();
+                            wants_to_use_item
+                                .insert(*self.ecs.fetch::<Entity>(), WantsToUseItem { item, target: None })
+                                .expect("Unable to insert item to wants_to_use_item");
+                            RunState::PlayerTurn
+                        }
                     }
                 }
             }
@@ -139,6 +149,20 @@ impl GameState for State {
                         wants_to_drop_potion
                             .insert(*self.ecs.fetch::<Entity>(), WantsToDropItem { item })
                             .expect("Unable to insert potion to wants_to_drop_potion");
+                        RunState::PlayerTurn
+                    }
+                }
+            }
+            RunState::ShowTargeting { range, item } => {
+                let (result, target) = gui::ranged_targeting(self, ctx, range);
+                match result {
+                    gui::ItemMenuResult::Cancel => RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => RunState::ShowTargeting { range, item },
+                    gui::ItemMenuResult::Selected => {
+                        let mut intent = self.ecs.write_storage::<WantsToUseItem>();
+                        intent
+                            .insert(*self.ecs.fetch::<Entity>(), WantsToUseItem { item, target })
+                            .expect("Unable to insert target to want_to_use_item");
                         RunState::PlayerTurn
                     }
                 }

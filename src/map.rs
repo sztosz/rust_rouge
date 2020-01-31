@@ -1,5 +1,5 @@
 use crate::rect::Rect;
-use crate::spawner::{health_potion, random_monster};
+use crate::spawner::{random_item, random_monster};
 use crate::{MAP_HEIGHT, MAP_WIDTH};
 use rltk::{Algorithm2D, BaseMap, Console, Point, RandomNumberGenerator, Rltk, RGB};
 use specs::{Entity, World, WorldExt};
@@ -53,6 +53,10 @@ impl Map {
 
     pub fn xy_to_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
+    }
+
+    pub fn point_to_idx(&self, point: Point) -> usize {
+        (point.y as usize * self.width as usize) + point.x as usize
     }
 
     pub fn idx_to_xy(&self, idx: usize) -> (i32, i32) {
@@ -109,9 +113,9 @@ impl Map {
 
         {
             let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-            let monsters_num = rng.roll_dice(1, MAX_MONSTERS_PER_ROOM);
 
-            for _i in 0..monsters_num {
+            // TODO: REFACTOR THOSE, MAKE IT A GENERIC FACTORY
+            for _i in 0..rng.roll_dice(1, MAX_MONSTERS_PER_ROOM) {
                 let mut added = false;
                 while !added {
                     let x = room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1));
@@ -125,7 +129,7 @@ impl Map {
                 }
             }
 
-            for _i in 0..MAX_ITEMS_PER_ROOM {
+            for _i in 0..rng.roll_dice(1, MAX_ITEMS_PER_ROOM) {
                 let mut added = false;
                 while !added {
                     let x = room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1));
@@ -148,7 +152,7 @@ impl Map {
         for idx in item_spawn_points.iter() {
             let x = idx % MAP_WIDTH;
             let y = idx / MAP_WIDTH;
-            health_potion(ecs, x, y);
+            random_item(ecs, x, y);
         }
     }
 

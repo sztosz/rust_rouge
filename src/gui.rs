@@ -1,4 +1,4 @@
-use crate::components::{CombatStats, InBackpack, Name, Player, Position};
+use crate::components::{CombatStats, InBackpack, Name, Player, Position, Viewshed};
 use crate::game_log::GameLog;
 use crate::state::State;
 use crate::{MAP_HEIGHT, MAP_WIDTH, UI_HEIGHT};
@@ -58,6 +58,7 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
 }
 
 fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
+    // TODO: MAKE TOOLTIPS VISIBLE ONLY WHEN POINTING TO VISIBLE TILE
     let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
     let mouse_pos = ctx.mouse_pos();
@@ -187,4 +188,50 @@ pub fn draw_drop_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuR
 
 pub fn draw_show_inventory_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     draw_inventory_menu(game_state, ctx, "Inventory")
+}
+
+pub fn ranged_targeting(game_state: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+    let black = RGB::named(rltk::BLACK);
+    let yellow = RGB::named(rltk::YELLOW);
+    let blue = RGB::named(rltk::BLUE);
+    let red = RGB::named(rltk::RED);
+    let cyan = RGB::named(rltk::CYAN);
+
+    let player_entity = game_state.ecs.fetch::<Entity>();
+    let player_position = game_state.ecs.fetch::<Point>();
+    let viewsheds = game_state.ecs.read_storage::<Viewshed>();
+
+    ctx.print_color(5, 0, yellow, black, "Select Target:");
+
+    let mut available_cells = Vec::new();
+
+    let visible = viewsheds.get(*player_entity).unwrap();
+
+    for idx in visible.visible_tiles.iter() {
+        let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_position, *idx);
+        if distance <= range as f32 {
+            ctx.set_bg(idx.x, idx.y, blue);
+            available_cells.push(idx);
+        }
+    }
+    let (mouse_x, mouse_y) = ctx.mouse_pos();
+
+    if available_cells
+        .iter()
+        .any(|Point { x, y }| x == &mouse_x && y == &mouse_y)
+    {
+        if ctx.left_click {
+            ctx.set_bg(mouse_x, mouse_y, cyan);
+            (ItemMenuResult::Selected, Some(Point { x: mouse_x, y: mouse_y }))
+        } else {
+            (ItemMenuResult::NoResponse, None)
+        }
+    } else {
+        ctx.set_bg(mouse_x, mouse_y, red);
+        if ctx.left_click {
+            (ItemMenuResult::Cancel, None)
+        } else {
+            (ItemMenuResult::NoResponse, None)
+        }
+    }
 }
