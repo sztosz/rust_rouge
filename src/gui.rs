@@ -5,11 +5,22 @@ use crate::{MAP_HEIGHT, MAP_WIDTH, UI_HEIGHT};
 use rltk::{Console, Point, Rltk, VirtualKeyCode, RGB};
 use specs::prelude::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum ItemMenuResult {
     Cancel,
     NoResponse,
     Selected,
+}
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuSelection {
+    NewGame,
+    LoadGame,
+    Quit,
+}
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuResult {
+    NoSelection { selected: MainMenuSelection },
+    Selected { selected: MainMenuSelection },
 }
 
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
@@ -131,15 +142,15 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
     }
 }
 
-pub fn draw_inventory_menu(game_state: &mut State, ctx: &mut Rltk, title: &str) -> (ItemMenuResult, Option<Entity>) {
+pub fn draw_inventory_menu(state: &mut State, ctx: &mut Rltk, title: &str) -> (ItemMenuResult, Option<Entity>) {
     let white = RGB::named(rltk::WHITE);
     let black = RGB::named(rltk::BLACK);
     let yellow = RGB::named(rltk::YELLOW);
 
-    let player_entity = game_state.ecs.fetch::<Entity>();
-    let names = game_state.ecs.read_storage::<Name>();
-    let in_backpack = game_state.ecs.read_storage::<InBackpack>();
-    let entities = game_state.ecs.entities();
+    let player_entity = state.ecs.fetch::<Entity>();
+    let names = state.ecs.read_storage::<Name>();
+    let in_backpack = state.ecs.read_storage::<InBackpack>();
+    let entities = state.ecs.entities();
 
     let count = (&in_backpack, &names)
         .join()
@@ -182,24 +193,24 @@ pub fn draw_inventory_menu(game_state: &mut State, ctx: &mut Rltk, title: &str) 
     }
 }
 
-pub fn draw_drop_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
-    draw_inventory_menu(game_state, ctx, "Drop Which Item?")
+pub fn draw_drop_item_menu(state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    draw_inventory_menu(state, ctx, "Drop Which Item?")
 }
 
-pub fn draw_show_inventory_item_menu(game_state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
-    draw_inventory_menu(game_state, ctx, "Inventory")
+pub fn draw_show_inventory_item_menu(state: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    draw_inventory_menu(state, ctx, "Inventory")
 }
 
-pub fn ranged_targeting(game_state: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+pub fn ranged_targeting(state: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
     let black = RGB::named(rltk::BLACK);
     let yellow = RGB::named(rltk::YELLOW);
     let blue = RGB::named(rltk::BLUE);
     let red = RGB::named(rltk::RED);
     let cyan = RGB::named(rltk::CYAN);
 
-    let player_entity = game_state.ecs.fetch::<Entity>();
-    let player_position = game_state.ecs.fetch::<Point>();
-    let viewsheds = game_state.ecs.read_storage::<Viewshed>();
+    let player_entity = state.ecs.fetch::<Entity>();
+    let player_position = state.ecs.fetch::<Point>();
+    let viewsheds = state.ecs.read_storage::<Viewshed>();
 
     ctx.print_color(5, 0, yellow, black, "Select Target:");
 
@@ -233,5 +244,57 @@ pub fn ranged_targeting(game_state: &mut State, ctx: &mut Rltk, range: i32) -> (
         } else {
             (ItemMenuResult::NoResponse, None)
         }
+    }
+}
+
+pub fn main_menu(selection: MainMenuSelection, ctx: &mut Rltk) -> MainMenuResult {
+    let magenta = RGB::named(rltk::MAGENTA);
+    let white = RGB::named(rltk::WHITE);
+    let black = RGB::named(rltk::BLACK);
+
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ROUGE");
+
+    match selection {
+        MainMenuSelection::NewGame => {
+            ctx.print_color_centered(24, magenta, black, "Begin New Game");
+            ctx.print_color_centered(25, white, black, "Load Game");
+            ctx.print_color_centered(26, white, black, "Quit");
+        }
+        MainMenuSelection::LoadGame => {
+            ctx.print_color_centered(24, white, black, "Begin New Game");
+            ctx.print_color_centered(25, magenta, black, "Load Game");
+            ctx.print_color_centered(26, white, black, "Quit");
+        }
+
+        MainMenuSelection::Quit => {
+            ctx.print_color_centered(24, white, black, "Begin New Game");
+            ctx.print_color_centered(25, white, black, "Load Game");
+            ctx.print_color_centered(26, magenta, black, "Quit");
+        }
+    }
+
+    match ctx.key {
+        None => MainMenuResult::NoSelection { selected: selection },
+        Some(key) => match key {
+            VirtualKeyCode::Escape => MainMenuResult::NoSelection {
+                selected: MainMenuSelection::Quit,
+            },
+            VirtualKeyCode::Up => MainMenuResult::NoSelection {
+                selected: match selection {
+                    MainMenuSelection::NewGame => MainMenuSelection::Quit,
+                    MainMenuSelection::LoadGame => MainMenuSelection::NewGame,
+                    MainMenuSelection::Quit => MainMenuSelection::LoadGame,
+                },
+            },
+            VirtualKeyCode::Down => MainMenuResult::NoSelection {
+                selected: match selection {
+                    MainMenuSelection::NewGame => MainMenuSelection::LoadGame,
+                    MainMenuSelection::LoadGame => MainMenuSelection::Quit,
+                    MainMenuSelection::Quit => MainMenuSelection::NewGame,
+                },
+            },
+            VirtualKeyCode::Return => MainMenuResult::Selected { selected: selection },
+            _ => MainMenuResult::NoSelection { selected: selection },
+        },
     }
 }

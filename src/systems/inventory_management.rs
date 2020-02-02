@@ -100,6 +100,7 @@ impl<'a> System<'a> for ItemUseSystem {
             let mut used = false;
             let action_targets = Self::targets(used_item, &data);
 
+            // TODO: SPLIT IT TO SEPARATE SYUSTEMS
             match data.provides_healing.get(used_item.item) {
                 None => {}
                 Some(healing) => {
@@ -123,7 +124,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     for target in action_targets.iter() {
                         data.suffer_damage
                             .insert(*target, SufferDamage { amount: damage.damage })
-                            .expect("Unable to insert damage to mob entity");
+                            .expect("Unable to insert damage to target entity");
                         if entity == *data.player_entity {
                             let target_name = data.names.get(*target).unwrap();
                             data.gamelog.entries.insert(

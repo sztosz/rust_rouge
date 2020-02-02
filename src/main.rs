@@ -1,6 +1,7 @@
+#[macro_use]
+extern crate specs_derive;
+
 rltk::add_wasm_support!();
-use rltk::{Point, Rltk};
-use specs::prelude::*;
 
 mod components;
 mod game_log;
@@ -12,29 +13,21 @@ mod spawner;
 mod state;
 mod systems;
 
-use crate::components::{
-    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, InBackpack, InflictsDamage, Item, Monster, Name,
-    Player, Position, ProvidesHealing, Ranged, Renderable, SufferDamage, Viewshed, WantsToDropItem, WantsToMelee,
-    WantsToPickupItem, WantsToUseItem,
-};
+use crate::components::*;
 use crate::map::Map;
 use crate::state::{RunState, State};
+use rltk::{Point, Rltk};
+use specs::prelude::*;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
 const MAP_WIDTH: i32 = 80;
 const MAP_HEIGHT: i32 = 50;
 const UI_HEIGHT: i32 = 10;
 
-#[macro_use]
-extern crate specs_derive;
-
 fn main() {
-    let context = Rltk::init_simple8x8(
-        MAP_WIDTH as u32,
-        (MAP_HEIGHT + UI_HEIGHT) as u32,
-        "RLTK Rouge",
-        "resources",
-    );
+    let context = Rltk::init_simple8x8(MAP_WIDTH as u32, (MAP_HEIGHT + UI_HEIGHT) as u32, "Rouge", "resources");
     let mut state = State { ecs: World::new() };
+    state.ecs.register::<SimpleMarker<SerializeMe>>();
     state.ecs.register::<Position>();
     state.ecs.register::<Renderable>();
     state.ecs.register::<Player>();
@@ -57,10 +50,7 @@ fn main() {
     state.ecs.register::<Confusion>();
     state.ecs.register::<AreaOfEffect>();
 
-    state.ecs.insert(RunState::PreRun);
-    state.ecs.insert(game_log::GameLog {
-        entries: vec!["Welcome!".to_string()],
-    });
+    state.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     state.ecs.insert(rltk::RandomNumberGenerator::new());
 
     let mut map = Map::new_map_with_rooms_and_corridors();
@@ -70,9 +60,13 @@ fn main() {
         Map::populate_room(&mut state.ecs, room);
     }
 
-    state.ecs.insert(map);
-
     let player_entity = spawner::player(&mut state.ecs, player_x, player_y);
+
+    state.ecs.insert(game_log::GameLog {
+        entries: vec!["Welcome!".to_string()],
+    });
+    state.ecs.insert(RunState::PreRun);
+    state.ecs.insert(map);
 
     state.ecs.insert(player_entity);
     state.ecs.insert(Point::new(player_x, player_y));

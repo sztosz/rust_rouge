@@ -2,6 +2,7 @@ use crate::rect::Rect;
 use crate::spawner::{random_item, random_monster};
 use crate::{MAP_HEIGHT, MAP_WIDTH};
 use rltk::{Algorithm2D, BaseMap, Console, Point, RandomNumberGenerator, Rltk, RGB};
+use serde::{Deserialize, Serialize};
 use specs::{Entity, World, WorldExt};
 use std::cmp::{max, min};
 
@@ -11,23 +12,26 @@ const MAX_SIZE: i32 = 10;
 const MAX_MONSTERS_PER_ROOM: i32 = 4;
 const MAX_ITEMS_PER_ROOM: i32 = 1;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
     Wall,
     Floor,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Map {
-    pub tiles: Vec<TileType>,
-    pub rooms: Vec<Rect>,
     pub width: i32,
     pub height: i32,
+    pub dimensions: usize,
+    pub tiles: Vec<TileType>,
+    pub rooms: Vec<Rect>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
     pub tile_content: Vec<Vec<Entity>>,
-    pub dimensions: usize,
 }
 
 impl Map {

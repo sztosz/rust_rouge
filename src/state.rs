@@ -18,6 +18,8 @@ pub enum RunState {
     ShowInventory,
     ShowDropItem,
     ShowTargeting { range: i32, item: Entity },
+    MainMenu { menu_selection: gui::MainMenuSelection },
+    SaveGame,
 }
 
 pub struct State {
@@ -44,61 +46,32 @@ impl State {
         item_drop_items.run_now(&self.ecs);
         self.ecs.maintain();
     }
-
-    fn remove_the_dead(&mut self) {
-        let mut dead = Vec::new();
-        {
-            let combat_stats = self.ecs.read_storage::<CombatStats>();
-            let players = self.ecs.read_storage::<Player>();
-            let entities = self.ecs.entities();
-            let names = self.ecs.read_storage::<Name>();
-            let mut log = self.ecs.write_resource::<GameLog>();
-            for (entity, stats) in (&entities, &combat_stats).join() {
-                if stats.hp < 1 {
-                    let player = players.get(entity);
-                    match player {
-                        None => {
-                            let victim_name = names.get(entity);
-                            log.entries
-                                .insert(0, format!("{} is dead", &victim_name.expect("Missing name").name));
-                            dead.push(entity)
-                        }
-                        Some(_) => log.entries.insert(0, "You are dead".to_string()),
-                    }
-                }
-            }
-        }
-        for victim in dead {
-            self.ecs.delete_entity(victim).expect("Could not delete dead entity");
-        }
-    }
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
-        Self::remove_the_dead(self);
-
         ctx.cls();
 
-        {
-            let map = self.ecs.fetch::<Map>();
-            map.draw(ctx);
+        let runstate = *self.ecs.fetch::<RunState>();
+        match runstate {
+            RunState::MainMenu { .. } => {}
+            _ => {
+                let map = self.ecs.fetch::<Map>();
+                map.draw(ctx);
 
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-            for (pos, render) in data.iter() {
-                let idx = map.xy_to_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] {
-                    ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
+                let positions = self.ecs.read_storage::<Position>();
+                let renderables = self.ecs.read_storage::<Renderable>();
+                let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
+                for (pos, render) in data.iter() {
+                    let idx = map.xy_to_idx(pos.x, pos.y);
+                    if map.visible_tiles[idx] {
+                        ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
+                    }
                 }
+                gui::draw_ui(&self.ecs, ctx);
             }
         }
-
-        gui::draw_ui(&self.ecs, ctx);
-
-        let runstate = *self.ecs.fetch::<RunState>();
 
         let newrunstate = match runstate {
             RunState::PreRun => {
@@ -167,11 +140,62 @@ impl GameState for State {
                     }
                 }
             }
+            RunState::MainMenu {
+                menu_selection: selection,
+            } => {
+                let result = gui::main_menu(selection, ctx);
+                match result {
+                    gui::MainMenuResult::NoSelection { selected } => RunState::MainMenu {
+                        menu_selection: selected,
+                    },
+                    gui::MainMenuResult::Selected { selected } => match selected {
+                        gui::MainMenuSelection::NewGame => RunState::PreRun,
+                        gui::MainMenuSelection::LoadGame => RunState::PreRun,
+                        gui::MainMenuSelection::Quit => ::std::process::exit(0),
+                    },
+                }
+            }
+            RunState::SaveGame => {
+                let ron_data = ron::ser::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+                println!("{}", ron_data);
+                RunState::MainMenu {
+                    menu_selection: gui::MainMenuSelection::LoadGame,
+                }
+            }
         };
 
         {
             let mut runwriter = self.ecs.write_resource::<RunState>();
             *runwriter = newrunstate;
         }
+        remove_the_dead(&mut self.ecs);
+    }
+}
+
+fn remove_the_dead(ecs: &mut World) {
+    let mut dead = Vec::new();
+    {
+        let combat_stats = ecs.read_storage::<CombatStats>();
+        let players = ecs.read_storage::<Player>();
+        let entities = ecs.entities();
+        let names = ecs.read_storage::<Name>();
+        let mut log = ecs.write_resource::<GameLog>();
+        for (entity, stats) in (&entities, &combat_stats).join() {
+            if stats.hp < 1 {
+                let player = players.get(entity);
+                match player {
+                    None => {
+                        let victim_name = names.get(entity);
+                        log.entries
+                            .insert(0, format!("{} is dead", &victim_name.expect("Missing name").name));
+                        dead.push(entity)
+                    }
+                    Some(_) => log.entries.insert(0, "You are dead".to_string()),
+                }
+            }
+        }
+    }
+    for victim in dead {
+        ecs.delete_entity(victim).expect("Could not delete dead entity");
     }
 }

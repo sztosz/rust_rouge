@@ -47,23 +47,24 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     }
 }
 
-pub fn player_input(game_state: &mut State, ctx: &mut Rltk) -> RunState {
+pub fn player_input(state: &mut State, ctx: &mut Rltk) -> RunState {
     match ctx.key {
         None => {
             return RunState::AwaitingInput;
         }
         Some(key) => match key {
-            VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut game_state.ecs),
-            VirtualKeyCode::Numpad2 | VirtualKeyCode::Down => try_move_player(0, 1, &mut game_state.ecs),
-            VirtualKeyCode::Numpad3 => try_move_player(1, 1, &mut game_state.ecs),
-            VirtualKeyCode::Numpad4 | VirtualKeyCode::Left => try_move_player(-1, 0, &mut game_state.ecs),
-            VirtualKeyCode::Numpad6 | VirtualKeyCode::Right => try_move_player(1, 0, &mut game_state.ecs),
-            VirtualKeyCode::Numpad7 => try_move_player(-1, -1, &mut game_state.ecs),
-            VirtualKeyCode::Numpad8 | VirtualKeyCode::Up => try_move_player(0, -1, &mut game_state.ecs),
-            VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut game_state.ecs),
-            VirtualKeyCode::G => get_item(&mut game_state.ecs),
+            VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut state.ecs),
+            VirtualKeyCode::Numpad2 | VirtualKeyCode::Down => try_move_player(0, 1, &mut state.ecs),
+            VirtualKeyCode::Numpad3 => try_move_player(1, 1, &mut state.ecs),
+            VirtualKeyCode::Numpad4 | VirtualKeyCode::Left => try_move_player(-1, 0, &mut state.ecs),
+            VirtualKeyCode::Numpad6 | VirtualKeyCode::Right => try_move_player(1, 0, &mut state.ecs),
+            VirtualKeyCode::Numpad7 => try_move_player(-1, -1, &mut state.ecs),
+            VirtualKeyCode::Numpad8 | VirtualKeyCode::Up => try_move_player(0, -1, &mut state.ecs),
+            VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut state.ecs),
+            VirtualKeyCode::G => get_item(&mut state.ecs),
             VirtualKeyCode::I => return RunState::ShowInventory,
             VirtualKeyCode::D => return RunState::ShowDropItem,
+            VirtualKeyCode::Escape => return RunState::SaveGame,
             _ => return RunState::AwaitingInput,
         },
     }
