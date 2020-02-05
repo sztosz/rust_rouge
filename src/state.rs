@@ -5,7 +5,7 @@ use crate::systems::{
     DamageSystem, ItemCollectionSystem, ItemDropSystem, ItemUseSystem, MapIndexingSystem, MeleeCombatSystem, MonsterAI,
     VisibilitySystem,
 };
-use crate::{gui, player};
+use crate::{gui, player, save_load};
 use rltk::{Console, GameState, Rltk};
 use specs::prelude::*;
 
@@ -19,7 +19,6 @@ pub enum RunState {
     ShowDropItem,
     ShowTargeting { range: i32, item: Entity },
     MainMenu { menu_selection: gui::MainMenuSelection },
-    SaveGame,
 }
 
 pub struct State {
@@ -151,15 +150,11 @@ impl GameState for State {
                     gui::MainMenuResult::Selected { selected } => match selected {
                         gui::MainMenuSelection::NewGame => RunState::PreRun,
                         gui::MainMenuSelection::LoadGame => RunState::PreRun,
-                        gui::MainMenuSelection::Quit => ::std::process::exit(0),
+                        gui::MainMenuSelection::Quit => {
+                            save_load::save_game(&mut self.ecs);
+                            ::std::process::exit(0)
+                        }
                     },
-                }
-            }
-            RunState::SaveGame => {
-                let ron_data = ron::ser::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-                println!("{}", ron_data);
-                RunState::MainMenu {
-                    menu_selection: gui::MainMenuSelection::LoadGame,
                 }
             }
         };

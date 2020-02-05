@@ -1,4 +1,5 @@
 use crate::components::{CombatStats, Item, Player, Position, Viewshed, WantsToMelee, WantsToPickupItem};
+use crate::gui;
 use crate::map::Map;
 use crate::state::{RunState, State};
 use rltk::{console, Point, Rltk, VirtualKeyCode};
@@ -64,7 +65,11 @@ pub fn player_input(state: &mut State, ctx: &mut Rltk) -> RunState {
             VirtualKeyCode::G => get_item(&mut state.ecs),
             VirtualKeyCode::I => return RunState::ShowInventory,
             VirtualKeyCode::D => return RunState::ShowDropItem,
-            VirtualKeyCode::Escape => return RunState::SaveGame,
+            VirtualKeyCode::Escape => {
+                return RunState::MainMenu {
+                    menu_selection: gui::MainMenuSelection::LoadGame,
+                }
+            }
             _ => return RunState::AwaitingInput,
         },
     }

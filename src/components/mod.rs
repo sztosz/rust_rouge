@@ -10,7 +10,7 @@ pub struct Position {
     pub y: i32,
 }
 
-#[derive(Component, ConvertSaveload)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Renderable {
     pub glyph: u8,
     pub fg: RGB,
@@ -18,31 +18,31 @@ pub struct Renderable {
     pub render_order: i32,
 }
 
-#[derive(Component, Serialize, Deserialize)]
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct LeftMover {}
 
-#[derive(Component, Serialize, Deserialize)]
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Player {}
 
-#[derive(Component, ConvertSaveload)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
     pub dirty: bool,
 }
 
-#[derive(Component, Debug, Serialize, Deserialize)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Name {
     pub name: String,
 }
 
-#[derive(Component, Debug, Serialize, Deserialize)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct BlocksTile {}
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
     pub max_hp: i32,
     pub hp: i32,
@@ -50,17 +50,17 @@ pub struct CombatStats {
     pub power: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToMelee {
     pub target: Entity,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct SufferDamage {
     pub amount: i32,
 }
 
-#[derive(Component, Debug, Serialize, Deserialize)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {}
 
 #[derive(Component, Debug, Clone, ConvertSaveload)]
@@ -74,25 +74,25 @@ pub struct WantsToPickupItem {
     pub item: Entity,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToDropItem {
     pub item: Entity,
 }
 
-#[derive(Component, Debug, Serialize, Deserialize)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Consumable {}
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct ProvidesHealing {
     pub heal_amount: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Ranged {
     pub range: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct InflictsDamage {
     pub damage: i32,
 }
@@ -103,13 +103,18 @@ pub struct WantsToUseItem {
     pub target: Option<rltk::Point>,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct AreaOfEffect {
     pub radius: i32,
 }
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Confusion {
     pub turns: i32,
 }
-#[derive(Component)]
+
 pub struct SerializeMe {}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SerializationHelper {
+    pub map: super::map::Map,
+}

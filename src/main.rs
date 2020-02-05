@@ -9,6 +9,7 @@ mod gui;
 mod map;
 mod player;
 mod rect;
+mod save_load;
 mod spawner;
 mod state;
 mod systems;
@@ -28,6 +29,7 @@ fn main() {
     let context = Rltk::init_simple8x8(MAP_WIDTH as u32, (MAP_HEIGHT + UI_HEIGHT) as u32, "Rouge", "resources");
     let mut state = State { ecs: World::new() };
     state.ecs.register::<SimpleMarker<SerializeMe>>();
+    state.ecs.register::<SerializationHelper>();
     state.ecs.register::<Position>();
     state.ecs.register::<Renderable>();
     state.ecs.register::<Player>();

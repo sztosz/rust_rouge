@@ -258,18 +258,18 @@ pub fn main_menu(selection: MainMenuSelection, ctx: &mut Rltk) -> MainMenuResult
         MainMenuSelection::NewGame => {
             ctx.print_color_centered(24, magenta, black, "Begin New Game");
             ctx.print_color_centered(25, white, black, "Load Game");
-            ctx.print_color_centered(26, white, black, "Quit");
+            ctx.print_color_centered(26, white, black, "Save and Quit");
         }
         MainMenuSelection::LoadGame => {
             ctx.print_color_centered(24, white, black, "Begin New Game");
             ctx.print_color_centered(25, magenta, black, "Load Game");
-            ctx.print_color_centered(26, white, black, "Quit");
+            ctx.print_color_centered(26, white, black, "Save and Quit");
         }
 
         MainMenuSelection::Quit => {
             ctx.print_color_centered(24, white, black, "Begin New Game");
             ctx.print_color_centered(25, white, black, "Load Game");
-            ctx.print_color_centered(26, magenta, black, "Quit");
+            ctx.print_color_centered(26, magenta, black, "Save and Quit");
         }
     }
 
